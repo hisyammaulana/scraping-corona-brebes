@@ -46,13 +46,16 @@ app.get('/', function (req, res) {
         pdp : {total_pdp : total_pdp, dirawat : dirawat_pdp, pulang : pulang},
         diperbaharui : update
       })
-
   });
+
+  var coronaArray = coronaBrebes
+
+  var coronaObj = coronaArray.reduce((a, b) => Object.assign(a, b), {})
   
-  res.send(JSON.stringify(coronaBrebes, null, 4));
+  res.send(JSON.stringify(coronaObj));
 });
 
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 2000;
 app.listen(port, function () {
   console.log('listening on port ' + port);
 });
