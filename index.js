@@ -38,13 +38,14 @@ app.get('/', function (req, res) {
       var dirawat_pdp = pdp.find('p').eq(1).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
       var pulang = pdp.find('p').eq(2).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
 
-      var update = pdp.find('.small-box-footer').text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').slice(10);
+      var update = pdp.find('.progress-description').text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '');
+      var tanggal = update.substring(update.length - 10, update.length);
 
       coronaBrebes.push({
         konfirmasi: {total_kasus: total_kasus, dirawat: dirawat,  sembuh: sembuh, meniggal: meniggal},
         odp : {total_odp : total_odp, dalam_pemantauan: sedang_pemantauan, selesai_pemantauan: sudah_pemantauan},
         pdp : {total_pdp : total_pdp, dirawat : dirawat_pdp, pulang : pulang},
-        diperbaharui : update
+        diperbaharui : tanggal
       })
   });
 
