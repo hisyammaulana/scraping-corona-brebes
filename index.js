@@ -57,65 +57,73 @@ app.get('/', async function (req, res) {
   res.send(JSON.stringify(coronaObj));
 });
 
-app.get('/tegal', async function (req, res) {
 
+//api tegal
+app.get('/tegal', async function (req, res) {
+  const token = req.headers['authorization']
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With');
-
-  try {
-    const url = 'http://covid19.tegalkab.go.id/'
-    const results = await getData(url);
-    const $ = cheerio.load(results);
-    const content = $('body .content');
-
-    const text = [];
-    const num = [];
-    const dataKec = [];
-    const tableHeaders = [];
-
-    content.find('div .inner p').each(function (i){ text[i] = $(this).text() });
-    content.find('div .inner h3').each(function (i){ num[i] = $(this).text().trim().replace(/  +/g, ' ') });
-    $('body > section > div > div.col-md-4 > div > div.panel-body > table > thead > tr').each((index, element) => {
-      if (index === 0) {
-        const ths = $(element).find("th");
-         $(ths).each((i, element) => {
-           tableHeaders.push(
-             $(element)
-               .text()
-           );
-         });
-          return true;
-        }
-    });
-    $('body > section > div > div.col-md-4 > div > div.panel-body > table > tbody > tr').each((index, element) => {
-        const tds = $(element).find('td');
-        const tableRow = {};
-        $(tds).each((i, element) => {
-          tableRow[tableHeaders[i]] = $(element).text();
-        });
-        dataKec.push(tableRow);
-    });
-
-    console.log(dataKec);
-    const confirm = Object.assign(...text.map((t,i) => ({[t] : +num[i]}) ));
-    const fixConfirm = Object.assign({}, confirm,{'PDP SEMBUH' : +num[text.length]},{'CONFIRM SEMBUH' : +num[text.length+1]});
-
+  if(token === undefined){
     res.send(JSON.stringify({
-      message: 'success',
-      status: true,
-      data: {
-        konfirmasi: fixConfirm,
-        kecamatan: dataKec,
-        rs: null
-      }
-    }));
-  } catch (e) {
-    console.log(e);
-    res.send(JSON.stringify({
-      message: 'failed',
+      message: '401 Authorization',
       status: false
     }));
+  }else {
+    try {
+      const url = 'http://covid19.tegalkab.go.id/'
+      const results = await getData(url);
+      const $ = cheerio.load(results);
+      const content = $('body .content');
+
+      const text = [];
+      const num = [];
+      const dataKec = [];
+      const tableHeaders = [];
+
+      content.find('div .inner p').each(function (i){ text[i] = $(this).text() });
+      content.find('div .inner h3').each(function (i){ num[i] = $(this).text().trim().replace(/  +/g, ' ') });
+      $('body > section > div > div.col-md-4 > div > div.panel-body > table > thead > tr').each((index, element) => {
+        if (index === 0) {
+          const ths = $(element).find("th");
+           $(ths).each((i, element) => {
+             tableHeaders.push(
+               $(element)
+                 .text()
+             );
+           });
+            return true;
+          }
+      });
+      $('body > section > div > div.col-md-4 > div > div.panel-body > table > tbody > tr').each((index, element) => {
+          const tds = $(element).find('td');
+          const tableRow = {};
+          $(tds).each((i, element) => {
+            tableRow[tableHeaders[i]] = $(element).text();
+          });
+          dataKec.push(tableRow);
+      });
+
+      const confirm = Object.assign(...text.map((t,i) => ({[t] : +num[i]}) ));
+      const fixConfirm = Object.assign({}, confirm,{'PDP SEMBUH' : +num[text.length]},{'CONFIRM SEMBUH' : +num[text.length+1]});
+
+      res.send(JSON.stringify({
+        message: 'success',
+        status: true,
+        data: {
+          konfirmasi: fixConfirm,
+          kecamatan: dataKec,
+          rs: null
+        }
+      }));
+    } catch (e) {
+      console.log(e);
+      res.send(JSON.stringify({
+        message: 'failed',
+        status: false
+      }));
+    }
   }
+
 
   function getData(url){
     return requestPromise.get(url,{strictSSL: false}, (err,body) => body);
