@@ -1,21 +1,22 @@
 var express = require('express');
 var cheerio = require('cheerio');
 var request = require('request');
+var requestPromise = require('request-promise');
 var app = express();
 var coronaBrebes = [];
 
-app.get('/', function (req, res) {
-  
+app.get('/', async function (req, res) {
+
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With');
-  
-  
-  request({
+
+
+  await request({
     method: 'GET',
     url: 'http://corona.brebeskab.go.id/'
     }, function(err, response, body, callback) {
       if (err) return console.error(err);
-      
+
       $ = cheerio.load(body);
 
       if(coronaBrebes.length > 0){
@@ -27,7 +28,7 @@ app.get('/', function (req, res) {
       var dirawat = kasus.find('p').eq(1).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
       var sembuh = kasus.find('p').eq(2).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
       var meniggal = kasus.find('p').eq(3).text().trim().replace('\n', '').replace(/\D/g,'');
-      
+
       var odp = $('body .bg-green');
       var total_odp = odp.find('p').eq(0).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
       var sedang_pemantauan = odp.find('p').eq(1).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
@@ -52,8 +53,80 @@ app.get('/', function (req, res) {
   var coronaArray = coronaBrebes
 
   var coronaObj = coronaArray.reduce((a, b) => Object.assign(a, b), {})
-  
+
   res.send(JSON.stringify(coronaObj));
+});
+
+app.get('/tegal', async function (req, res) {
+
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'X-Requested-With');
+
+  try {
+    const url = 'http://covid19.tegalkab.go.id/'
+    const results = await getData(url);
+    const $ = cheerio.load(results);
+    const content = $('body .content');
+
+    const text = [];
+    const num = [];
+    const dataKec = [];
+    const tableHeaders = [];
+
+    content.find('div .inner p').each(function (i){ text[i] = $(this).text() });
+    content.find('div .inner h3').each(function (i){ num[i] = $(this).text().trim().replace(/  +/g, ' ') });
+    $('body > section > div > div.col-md-4 > div > div.panel-body > table > thead > tr').each((index, element) => {
+      if (index === 0) {
+        const ths = $(element).find("th");
+         $(ths).each((i, element) => {
+           tableHeaders.push(
+             $(element)
+               .text()
+           );
+         });
+          return true;
+        }
+    });
+    $('body > section > div > div.col-md-4 > div > div.panel-body > table > tbody > tr').each((index, element) => {
+        const tds = $(element).find('td');
+        const tableRow = {};
+        $(tds).each((i, element) => {
+          tableRow[tableHeaders[i]] = $(element).text();
+        });
+        dataKec.push(tableRow);
+    });
+
+    console.log(dataKec);
+    const confirm = Object.assign(...text.map((t,i) => ({[t] : +num[i]}) ));
+    const fixConfirm = Object.assign({}, confirm,{'PDP SEMBUH' : +num[text.length]},{'CONFIRM SEMBUH' : +num[text.length+1]});
+
+    res.send(JSON.stringify({
+      message: 'success',
+      status: true,
+      data: {
+        konfirmasi: fixConfirm,
+        kecamatan: dataKec,
+        rs: null
+      }
+    }));
+  } catch (e) {
+    console.log(e);
+    res.send(JSON.stringify({
+      message: 'failed',
+      status: false
+    }));
+  }
+
+  function getData(url){
+    return requestPromise.get(url,{strictSSL: false}, (err,body) => body);
+  }
+
+  // function dataTegal(t,n){
+  //
+  //
+  //   return
+  // }
+
 });
 
 var port = process.env.PORT || 2000;
