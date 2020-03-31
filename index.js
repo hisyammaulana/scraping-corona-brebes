@@ -63,7 +63,7 @@ app.get('/tegal', async function (req, res) {
   const token = req.headers['authorization']
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With');
-  if(token === undefined){
+  if(token !== 'RGlSdW1haEFqYVNheWFuZw=='){
     res.send(JSON.stringify({
       message: '401 Authorization',
       status: false
@@ -79,6 +79,7 @@ app.get('/tegal', async function (req, res) {
       const num = [];
       const dataKec = [];
       const tableHeaders = [];
+      const rsText = [];
 
       content.find('div .inner p').each(function (i){ text[i] = $(this).text() });
       content.find('div .inner h3').each(function (i){ num[i] = $(this).text().trim().replace(/  +/g, ' ') });
@@ -103,6 +104,17 @@ app.get('/tegal', async function (req, res) {
           dataKec.push(tableRow);
       });
 
+      $('body > section > div:nth-child(2) > div.col-md-3 > div > div.panel-body > div').each((index, element) => {
+          const tds = $(element).find('h4');
+          $(tds).each((i, element) => {
+            rsText.push($(element).text().replace('- ',''));
+          });
+      });
+
+      const rsData = rsText.map(r => r.substring(3)).filter((r,i) => i >= 0 && i <= 4 );
+      const rsKet = rsText.filter((r,i) => i >= 6 && i <= 10);
+
+
       const confirm = Object.assign(...text.map((t,i) => ({[t] : +num[i]}) ));
       const fixConfirm = Object.assign({}, confirm,{'PDP SEMBUH' : +num[text.length]},{'CONFIRM SEMBUH' : +num[text.length+1]});
 
@@ -112,7 +124,10 @@ app.get('/tegal', async function (req, res) {
         data: {
           konfirmasi: fixConfirm,
           kecamatan: dataKec,
-          rs: null
+          rs: {
+            data : rsData,
+            keterangan : rsKet
+          }
         }
       }));
     } catch (e) {
@@ -128,13 +143,6 @@ app.get('/tegal', async function (req, res) {
   function getData(url){
     return requestPromise.get(url,{strictSSL: false}, (err,body) => body);
   }
-
-  // function dataTegal(t,n){
-  //
-  //
-  //   return
-  // }
-
 });
 
 var port = process.env.PORT || 2000;
