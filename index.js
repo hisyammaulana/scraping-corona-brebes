@@ -113,6 +113,8 @@ app.get('/tegal', async function (req, res) {
           });
       });
 
+      const update = $('body > center > font').text().replace('Update : ','');
+
       const rsData = rsText.map(r => r.substring(3)).filter((r,i) => i >= 0 && i <= 4 );
       const rsKet = rsText.filter((r,i) => i >= 6 && i <= 10);
 
@@ -129,7 +131,8 @@ app.get('/tegal', async function (req, res) {
           rs: {
             data : rsData,
             keterangan : rsKet
-          }
+          },
+          updated: update
         }
       }));
     } catch (e) {
