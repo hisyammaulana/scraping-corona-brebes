@@ -116,7 +116,7 @@ app.get('/tegal', async function (req, res) {
       const update = $('body > center > font').text().replace('Update : ','');
 
       const rsData = rsText.map(r => r.substring(3)).filter((r,i) => i >= 0 && i <= 4 );
-      const rsKet = rsText.filter((r,i) => i >= 6 && i <= 10);
+      const rsKet = rsText.filter((r,i) => i >= 6 && i <= 9);
 
 
       const confirm = Object.assign(...text.map((t,i) => ({[t] : +num[i]}) ));
