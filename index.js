@@ -2,7 +2,8 @@ var express = require('express');
 var cheerio = require('cheerio');
 var request = require('request');
 var requestPromise = require('request-promise');
-var cors = require('cors')
+var cors = require('cors');
+const https = require('https');
 var app = express();
 var coronaBrebes = [];
 
@@ -151,6 +152,7 @@ app.get('/tegal', async function (req, res) {
 });
 
 var port = process.env.PORT || 2000;
+https.createServer(app).listen(3000);
 app.listen(port, function () {
   console.log('listening on port ' + port);
 });
