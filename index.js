@@ -2,8 +2,11 @@ var express = require('express');
 var cheerio = require('cheerio');
 var request = require('request');
 var requestPromise = require('request-promise');
+var cors = require('cors')
 var app = express();
 var coronaBrebes = [];
+
+app.use(cors());
 
 app.get('/', async function (req, res) {
 
@@ -60,10 +63,8 @@ app.get('/', async function (req, res) {
 
 //api tegal
 app.get('/tegal', async function (req, res) {
-  const token = req.headers['authorization']
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', '*');
 
+  const token = req.headers['authorization'];
   if(token !== 'RGlSdW1haEFqYVNheWFuZw=='){
     res.send(JSON.stringify({
       message: '401 Authorization',
