@@ -62,7 +62,8 @@ app.get('/', async function (req, res) {
 app.get('/tegal', async function (req, res) {
   const token = req.headers['authorization']
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'X-Requested-With');
+  res.header('Access-Control-Allow-Headers', '*');
+
   if(token !== 'RGlSdW1haEFqYVNheWFuZw=='){
     res.send(JSON.stringify({
       message: '401 Authorization',
