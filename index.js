@@ -83,7 +83,7 @@ app.get('/tegal', async function (req, res) {
       const tableHeaders = [];
       const rsText = [];
 
-      content.find('div .inner p').each(function (i){ text[i] = $(this).text().replace(' (Pelaku Perjalanan)','').replace(' (Orang Tanpa Gejala)','').replace(' ','_') });
+      content.find('div .inner p').each(function (i){ text[i] = $(this).text().replace(' (Pelaku Perjalanan)','').replace(' (Orang Tanpa Gejala)','') });
       content.find('div .inner h3').each(function (i){ num[i] = $(this).text().trim().replace(/  +/g, ' ') });
       $('body > section > div > div.col-md-4 > div > div.panel-body > table > thead > tr').each((index, element) => {
         if (index === 0) {
@@ -120,7 +120,7 @@ app.get('/tegal', async function (req, res) {
 
 
       const confirm = Object.assign(...text.map((t,i) => ({[t] : +num[i]}) ));
-      const fixConfirm = Object.assign({}, confirm,{'PDP SEMBUH' : +num[text.length]},{'CONFIRM SEMBUH' : +num[text.length+1]});
+      const fixConfirm = Object.assign({}, confirm,{'PDP_SEMBUH' : +num[text.length]},{'CONFIRM_SEMBUH' : +num[text.length+1]});
 
       res.send(JSON.stringify({
         message: 'success',
