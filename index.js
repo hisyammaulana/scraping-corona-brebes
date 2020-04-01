@@ -83,7 +83,7 @@ app.get('/tegal', async function (req, res) {
       const tableHeaders = [];
       const rsText = [];
 
-      content.find('div .inner p').each(function (i){ text[i] = $(this).text() });
+      content.find('div .inner p').each(function (i){ text[i] = $(this).text().replace(' (Pelaku Perjalanan)','').replace(' (Orang Tanpa Gejala)','') });
       content.find('div .inner h3').each(function (i){ num[i] = $(this).text().trim().replace(/  +/g, ' ') });
       $('body > section > div > div.col-md-4 > div > div.panel-body > table > thead > tr').each((index, element) => {
         if (index === 0) {
