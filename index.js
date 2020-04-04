@@ -2,6 +2,7 @@ var express = require('express');
 var cheerio = require('cheerio');
 var request = require('request');
 var requestPromise = require('request-promise');
+const https = require('https');
 var cors = require('cors');
 var app = express();
 var coronaBrebes = [];
@@ -9,6 +10,8 @@ var coronaBrebes = [];
 app.use(cors({credentials: true, origin: true}));
 
 app.get('/', async function (req, res) {
+
+  if (req.secure) {
 
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With');
@@ -58,6 +61,9 @@ app.get('/', async function (req, res) {
   var coronaObj = coronaArray.reduce((a, b) => Object.assign(a, b), {})
 
   res.send(JSON.stringify(coronaObj));
+  } else {
+    res.redirect(301, 'https://api-corona-brebes.herokuapp.com/');
+  }
 });
 
 
