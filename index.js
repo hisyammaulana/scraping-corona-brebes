@@ -3,11 +3,10 @@ var cheerio = require('cheerio');
 var request = require('request');
 var requestPromise = require('request-promise');
 var cors = require('cors');
-const https = require('https');
 var app = express();
 var coronaBrebes = [];
 
-app.use(cors());
+app.use(cors({credentials: true, origin: true}));
 
 app.get('/', async function (req, res) {
 
@@ -64,6 +63,8 @@ app.get('/', async function (req, res) {
 
 //api tegal
 app.get('/tegal', async function (req, res) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'X-Requested-With');
 
   const token = req.headers['authorization'];
   if(token !== 'RGlSdW1haEFqYVNheWFuZw=='){
@@ -98,6 +99,7 @@ app.get('/tegal', async function (req, res) {
             return true;
           }
       });
+
       $('body > section > div > div.col-md-4 > div > div.panel-body > table > tbody > tr').each((index, element) => {
           const tds = $(element).find('td');
           const tableRow = {};
@@ -120,14 +122,14 @@ app.get('/tegal', async function (req, res) {
       const rsKet = rsText.filter((r,i) => i >= 6 && i <= 9);
 
 
-      const confirm = Object.assign(...text.map((t,i) => ({[t] : +num[i]}) ));
-      const fixConfirm = Object.assign({}, confirm,{'PDP_SEMBUH' : +num[text.length]},{'CONFIRM_SEMBUH' : +num[text.length+1]});
+      const confirm = Object.assign(...text.map((t,i) => ({[t.replace(' ','_')] : +num[i]}) ));
+      //const fixConfirm = Object.assign({}, confirm,{'PDP_SEMBUH' : +num[text.length]},{'CONFIRM_SEMBUH' : +num[text.length+1]});
 
       res.send(JSON.stringify({
         message: 'success',
         status: true,
         data: {
-          konfirmasi: fixConfirm,
+          konfirmasi: confirm,
           kecamatan: dataKec,
           rs: {
             data : rsData,
@@ -152,7 +154,6 @@ app.get('/tegal', async function (req, res) {
 });
 
 var port = process.env.PORT || 2000;
-https.createServer(app).listen(3000);
 app.listen(port, function () {
   console.log('listening on port ' + port);
 });
