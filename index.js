@@ -1,8 +1,6 @@
 var express = require('express');
 var cheerio = require('cheerio');
-var request = require('request');
 var requestPromise = require('request-promise');
-const https = require('https');
 var cors = require('cors');
 var app = express();
 var coronaBrebes = [];
@@ -11,59 +9,64 @@ app.use(cors({credentials: true, origin: true}));
 
 app.get('/', async function (req, res) {
 
-  if (req.secure) {
-
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With');
 
+  const url = 'http://corona.brebeskab.go.id/'
+  const results = await getData(url);
+  const $ = cheerio.load(results);
+  var kasus = $('body .bg-red');
+  var total_kasus = kasus.find('p').eq(0).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
+  var dirawat = kasus.find('p').eq(1).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
+  var sembuh = kasus.find('p').eq(2).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
+  var meniggal = kasus.find('p').eq(3).text().trim().replace('\n', '').replace(/\D/g,'');
 
-  await request({
-    method: 'GET',
-    url: 'http://corona.brebeskab.go.id/'
-    }, function(err, response, body, callback) {
-      if (err) return console.error(err);
+  var odp = $('body .bg-green');
+  var total_odp = odp.find('p').eq(0).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
+  var sedang_pemantauan = odp.find('p').eq(1).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
+  var sudah_pemantauan = odp.find('p').eq(2).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
 
-      $ = cheerio.load(body);
+  var pdp = $('body .bg-blue');
+  var total_pdp = pdp.find('p').eq(0).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
+  var dirawat_pdp = pdp.find('p').eq(1).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
+  var pulang = pdp.find('p').eq(2).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
 
-      if(coronaBrebes.length > 0){
-        coronaBrebes = [];
-      }
+  var update = pdp.find('.progress-description').text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '');
+  var tanggal = update.substring(update.length - 10, update.length);
 
-      var kasus = $('body .bg-red');
-      var total_kasus = kasus.find('p').eq(0).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
-      var dirawat = kasus.find('p').eq(1).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
-      var sembuh = kasus.find('p').eq(2).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
-      var meniggal = kasus.find('p').eq(3).text().trim().replace('\n', '').replace(/\D/g,'');
+  coronaBrebes.push({
+    konfirmasi: {total_kasus: total_kasus, dirawat: dirawat,  sembuh: sembuh, meniggal: meniggal},
+    odp : {total_odp : total_odp, dalam_pemantauan: sedang_pemantauan, selesai_pemantauan: sudah_pemantauan},
+    pdp : {total_pdp : total_pdp, dirawat : dirawat_pdp, pulang : pulang},
+    diperbaharui : tanggal
+  })
 
-      var odp = $('body .bg-green');
-      var total_odp = odp.find('p').eq(0).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
-      var sedang_pemantauan = odp.find('p').eq(1).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
-      var sudah_pemantauan = odp.find('p').eq(2).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
+  const obj = coronaBrebes.reduce((a, b) => Object.assign(a, b), {})
 
-      var pdp = $('body .bg-blue');
-      var total_pdp = pdp.find('p').eq(0).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
-      var dirawat_pdp = pdp.find('p').eq(1).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
-      var pulang = pdp.find('p').eq(2).text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '').replace(/\D/g,'');
+  res.send(JSON.stringify(obj));
 
-      var update = pdp.find('.progress-description').text().trim().replace('\r\n\t\t\t\t\t', '').replace('\r\n\t\t\t\t', '');
-      var tanggal = update.substring(update.length - 10, update.length);
-
-      coronaBrebes.push({
-        konfirmasi: {total_kasus: total_kasus, dirawat: dirawat,  sembuh: sembuh, meniggal: meniggal},
-        odp : {total_odp : total_odp, dalam_pemantauan: sedang_pemantauan, selesai_pemantauan: sudah_pemantauan},
-        pdp : {total_pdp : total_pdp, dirawat : dirawat_pdp, pulang : pulang},
-        diperbaharui : tanggal
-      })
-  });
-
-  var coronaArray = coronaBrebes
-
-  var coronaObj = coronaArray.reduce((a, b) => Object.assign(a, b), {})
-
-  res.send(JSON.stringify(coronaObj));
-  } else {
-    res.redirect(301, 'https://api-corona-brebes.herokuapp.com/');
+  function getData(url){
+    return requestPromise.get(url,{strictSSL: false}, (err,body) => body);
   }
+
+  //  request({
+  //   method: 'GET',
+  //   url: 'http://corona.brebeskab.go.id/'
+  //   }, function(err, response, body, callback) {
+  //     if (err) return console.error(err);
+  //
+  //
+  //
+  //     if(coronaBrebes.length > 0){
+  //       coronaBrebes = [];
+  //     }
+  //
+  //
+  // });
+
+  // var coronaArray = coronaBrebes
+
+
 });
 
 
@@ -129,7 +132,6 @@ app.get('/tegal', async function (req, res) {
 
 
       const confirm = Object.assign(...text.map((t,i) => ({[t.replace(' ','_')] : +num[i]}) ));
-      //const fixConfirm = Object.assign({}, confirm,{'PDP_SEMBUH' : +num[text.length]},{'CONFIRM_SEMBUH' : +num[text.length+1]});
 
       res.send(JSON.stringify({
         message: 'success',
@@ -152,7 +154,6 @@ app.get('/tegal', async function (req, res) {
       }));
     }
   }
-
 
   function getData(url){
     return requestPromise.get(url,{strictSSL: false}, (err,body) => body);
